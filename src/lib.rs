@@ -8,6 +8,8 @@ use wasm_bindgen::prelude::*;
 
 pub mod game;
 
+use game::Game;
+
 cfg_if! {
     // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
     // allocator.
@@ -21,4 +23,10 @@ cfg_if! {
 #[wasm_bindgen]
 pub fn greet() -> String {
     "Hello, wasm-worker!".to_string()
+}
+
+#[wasm_bindgen]
+pub fn prototype() -> Game {
+    let game = Game::new(0);
+    game
 }

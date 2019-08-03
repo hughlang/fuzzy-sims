@@ -2,5 +2,5 @@ name = "fzd-sims"
 type = "rust"
 zone_id = ""
 private = false
-account_id = ""
+account_id = "dcc36d0a3b3dc7bcc1a2f7f2b4af9160"
 route = ""
