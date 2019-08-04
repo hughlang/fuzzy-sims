@@ -4,12 +4,6 @@
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 use rand::prelude::*;
-// use rand::distributions::{Range, Distribution};
-// use rand::rngs::SmallRng;
-// use rand::FromEntropy;
-
-// use rand_core::{RngCore, Error, impls, le};
-// use getrandom::getrandom;
 
 const SLOT_COUNT: usize = 6;
 
@@ -29,12 +23,8 @@ impl Slots {
 
     pub fn deal(&mut self) {
         self.nums.clear();
-        // let mut small_rng = SmallRng::from_entropy();
-        // let mut rng = thread_rng();
         let mut rng = self.get_rng();
-        // let range = Range::new(0, 10);
-        for i in 0..SLOT_COUNT {
-            // let x = RngCore::next_u32();
+        for _ in 0..SLOT_COUNT {
             let x = rng.gen_range(0, 10);
             println!("{}", x);
             self.nums.push(x as u32);
@@ -59,6 +49,7 @@ mod tests {
     fn test_rand() {
         let mut slots = Slots::new();
         slots.deal();
+        println!("{:?}", slots.get_nums());
         assert_eq!(slots.nums.len(), SLOT_COUNT);
     }
 }

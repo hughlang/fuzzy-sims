@@ -8,7 +8,7 @@ use wasm_bindgen::prelude::*;
 
 pub mod game;
 
-use game::Game;
+use game::Slots;
 
 cfg_if! {
     // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -27,7 +27,9 @@ pub fn greet() -> String {
 
 #[wasm_bindgen]
 pub fn slots() -> Vec<u32> {
-    Vec::new()
+    let mut slots = Slots::new();
+    slots.deal();
+    slots.get_nums()
 }
 
 // #[wasm_bindgen]

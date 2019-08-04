@@ -1,5 +1,5 @@
-pub use self::prototype::*;
+pub use self::poker::*;
 pub use self::slots::*;
 
-mod prototype;
+mod poker;
 mod slots;
