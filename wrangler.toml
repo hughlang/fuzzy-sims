@@ -1,4 +1,4 @@
-name = "fzd-sims"
+name = "fuzzy-sims"
 type = "rust"
 zone_id = ""
 private = false

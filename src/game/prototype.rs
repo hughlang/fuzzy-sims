@@ -12,10 +12,15 @@ pub struct Game {
 
 #[wasm_bindgen]
 impl Game {
+    #[wasm_bindgen(constructor)]
     pub fn new(id: u32) -> Self {
         Game {
             id,
         }
+    }
+
+    pub fn get_id(&self) -> u32 {
+        self.id
     }
 }
 

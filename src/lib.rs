@@ -26,7 +26,12 @@ pub fn greet() -> String {
 }
 
 #[wasm_bindgen]
-pub fn prototype() -> Game {
-    let game = Game::new(0);
-    game
+pub fn slots() -> Vec<u32> {
+    Vec::new()
 }
+
+// #[wasm_bindgen]
+// pub fn prototype() -> Game {
+//     let game = Game::new(0);
+//     game
+// }

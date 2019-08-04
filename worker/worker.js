@@ -16,13 +16,13 @@ async function handleRequest(request) {
         const greeting = greet()
         return new Response(greeting, {status: 200})
         break;
-    case '/prototype':
-        const { prototype } = wasm_bindgen;
+    case '/slots':
+        const { slots } = wasm_bindgen;
         await wasm_bindgen(wasm)
-        const game = prototype()
+        const slots = slots()
         return new Response(
           JSON.stringify({
-              game
+              slots
           }),
           { headers: { 'Content-type': 'application/json' } },
           )
