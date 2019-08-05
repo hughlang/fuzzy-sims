@@ -4,3 +4,7 @@ zone_id = ""
 private = false
 account_id = "dcc36d0a3b3dc7bcc1a2f7f2b4af9160"
 route = ""
+
+[[kv-namespaces]]
+binding = "FZData"
+id = "a1300aa7626641dcb20f65ce617d899b"
