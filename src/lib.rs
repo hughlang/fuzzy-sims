@@ -26,10 +26,11 @@ pub fn greet() -> String {
 }
 
 #[wasm_bindgen]
-pub fn slots() -> Vec<u32> {
+pub fn slots() -> String {
     let mut slots = Slots::new();
     slots.deal();
-    slots.get_nums()
+    let values = slots.get_nums();
+    values
 }
 
 // #[wasm_bindgen]

@@ -19,13 +19,14 @@ async function handleRequest(request) {
     case '/slots':
         const { slots } = wasm_bindgen;
         await wasm_bindgen(wasm)
-        const slots = slots()
-        return new Response(
-          JSON.stringify({
-              slots
-          }),
-          { headers: { 'Content-type': 'application/json' } },
-          )
+        const nums = slots()
+        return new Response(nums, {status: 200})
+        // return new Response(
+        //   JSON.stringify({
+        //       nums
+        //   }),
+        //   { headers: { 'Content-type': 'application/json' } },
+        //   )
         break;
       default:
         return new Response('Not found', { status: 404 });
