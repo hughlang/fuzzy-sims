@@ -2,6 +2,7 @@
 /// In the absence of slot machine symbols, the numbers are used for poker-like scoring.
 /// https://exercism.io/my/solutions/bf6b1195dc0e4b7885049db0c2605c09
 ///
+use super::{current_time};
 
 extern crate wasm_bindgen;
 extern crate js_sys;
@@ -11,6 +12,7 @@ use itertools::join;
 // use std::cmp::{Ordering, Reverse};
 use std::collections::{HashMap, HashSet};
 use std::iter;
+use rand::SeedableRng;
 
 const SLOT_COUNT: usize = 6;
 
@@ -26,20 +28,19 @@ pub enum Play {
     HighNum(u32),
 }
 
-// impl Play {
-//     fn increment(&self) {
-//         match self {
-//             Play::NumSequence(seq) => {
+impl Play {
+    pub fn get_score(&self) -> f32 {
+        match self {
+            Play::NumSequence(nums) => nums.len() as f32 * 5.0,
+            Play::NumMatch(nums) => nums.len() as f32 * 4.0,
+            Play::HighNum(num) => *num as f32 * 1.0,
+        }
+    }
+}
 
-//             }
-//             Play::NumMatch(matches) => {
+// #[derive(Clone, Eq, PartialEq, Hash, Debug)]
+// pub enum Scoring {
 
-//             }
-//             Play::HighNum(value) => {
-
-//             }
-//         }
-//     }
 // }
 
 #[wasm_bindgen]
@@ -80,15 +81,13 @@ impl Slots {
     /// Copied from: https://github.com/stevenpack/bob-ross-lipsum-rust/blob/master/src/phrases.rs
     /// See also: https://blog.cloudflare.com/cloudflare-workers-as-a-serverless-rust-platform/
     fn get_rng(&self) -> SmallRng {
-        use js_sys::Date;
-        use rand::SeedableRng;
 
         //from Javascript
-        // let ticks = Date::now();
+        let ticks = current_time();
 
         // Hack because of unit test error:
         // cannot call wasm-bindgen imported functions on non-wasm targets
-        let ticks: f64 = 1234567890.234;
+        // let ticks: f64 = 1234567890.234;
 
         //convert the number to byte array to use as a seed
         let tick_bytes = transmute(ticks as u128);
@@ -100,20 +99,29 @@ impl Slots {
         values
     }
 
-    /// Apply common slot machine rules for winning:
-    /// * N of a kind
-    /// * High score
-    ///
-    ///
-    pub fn evaluate_nums(&mut self) {
-        let mut nums = self.nums.clone();
+    pub fn calc_score(&self, numbers: &Vec<u32>) -> f32 {
+        let mut nums = numbers.clone();
         nums.sort();
         let matches = self.eval_matches(&nums);
+
         eprintln!("matches={:?}", matches);
+        let match_score = matches.iter().fold(0.0, |mut acc, play|{
+            acc += play.get_score();
+            acc
+        });
 
         let sequences = self.eval_sequences(&nums);
         eprintln!("sequences={:?}", sequences);
+        let seq_score = sequences.iter().fold(0.0, |mut acc, play|{
+            acc += play.get_score();
+            acc
+        });
 
+        match_score + seq_score
+    }
+
+    pub fn evaluate_nums(&mut self) {
+        let _ = self.calc_score(&self.nums);
     }
 
     /// The nums parameter must be sorted ascending
@@ -126,7 +134,6 @@ impl Slots {
             *freqs.entry(value).or_insert(0) += 1;
             freqs
         });
-        eprintln!("freqs={:?}", frequencies);
 
         for (key, value) in frequencies {
             if value >= 2 {
@@ -134,12 +141,6 @@ impl Slots {
                 plays.push(Play::NumMatch(values));
             }
         }
-        // let matches: HashMap< = frequencies.into_iter().filter(|(value, count)| *count >= 2).collect();
-        // let mode = frequencies
-        //     .into_iter()
-        //     .max_by_key(|&(_, count)| count)
-        //     .map(|(value, _)| *value);
-        // eprintln!("mode={:?}", mode);
 
         plays
     }
@@ -148,15 +149,21 @@ impl Slots {
         // Iterate over the possible ranges where sequences might occur
         // The minimum sequence length is 3, so limit the number of iterations so that
         // the ranges tested for a nums length of 6 is: 0..6, 1..6, 2..6
-        //
 
         let plays = nums.into_iter().fold(Vec::<Play>::new(), |mut acc, num| {
             if let Some(play) = acc.pop() {
                 match play {
                     Play::NumSequence(seq) => {
-                        let mut seq = seq.clone();
-                        seq.push(*num);
-                        acc.push(Play::NumSequence(seq));
+                        if let Some(last_num) = seq.last() {
+                            let num = num.to_owned();
+                            if num == last_num.to_owned() + 1 {
+                                let mut seq = seq.clone();
+                                seq.push(num);
+                                acc.push(Play::NumSequence(seq));
+                            }
+                        } else {
+                            acc.push(Play::NumSequence(vec![*num]));
+                        }
                     }
                     _ => ()
                 }
@@ -165,8 +172,18 @@ impl Slots {
             }
             acc
         });
-
-        plays
+        let mut results: Vec<Play> = Vec::new();
+        for play in plays {
+            match play {
+                Play::NumSequence(seq) => {
+                    if seq.len() >= 3 {
+                        results.push(Play::NumSequence(seq.clone()));
+                    }
+                }
+                _ => ()
+            }
+        }
+        results
     }
 }
 
@@ -209,5 +226,24 @@ mod tests {
         println!("{:?}", slots.get_nums());
         assert_eq!(slots.nums.len(), SLOT_COUNT);
         slots.evaluate_nums();
+    }
+
+    #[test]
+    fn test_these() {
+
+        // let nums = vec![6,3,5,4,0,8];
+
+
+    }
+
+    #[test]
+    fn test_many() {
+        for i in 0..50 {
+            let mut slots = Slots::new(SLOT_COUNT);
+            slots.deal();
+            let score = slots.calc_score(&slots.nums);
+            println!("{}/ {:?} >> score={}", i, slots.get_nums(), score);
+
+        }
     }
 }

@@ -33,8 +33,4 @@ pub fn slots() -> String {
     values
 }
 
-// #[wasm_bindgen]
-// pub fn prototype() -> Game {
-//     let game = Game::new(0);
-//     game
-// }
+
