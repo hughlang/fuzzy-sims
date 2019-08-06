@@ -27,7 +27,7 @@ pub fn greet() -> String {
 
 #[wasm_bindgen]
 pub fn slots() -> String {
-    let mut slots = Slots::new();
+    let mut slots = Slots::default();
     slots.deal();
     let values = slots.get_nums();
     values
