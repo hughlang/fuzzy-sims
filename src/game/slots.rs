@@ -9,10 +9,8 @@ extern crate js_sys;
 use wasm_bindgen::prelude::*;
 use rand::prelude::*;
 use itertools::join;
-// use std::cmp::{Ordering, Reverse};
 use std::collections::{HashMap, HashSet};
-use std::iter;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 
 const SLOT_COUNT: usize = 6;
 
@@ -71,27 +69,11 @@ impl Slots {
 
     pub fn deal(&mut self) {
         self.nums.clear();
-        let mut rng = self.get_rng();
+        let mut rng = get_rng();
         for _ in 0..SLOT_COUNT {
             let x = rng.gen_range(0, 10);
             self.nums.push(x as u32);
         }
-    }
-
-    /// Copied from: https://github.com/stevenpack/bob-ross-lipsum-rust/blob/master/src/phrases.rs
-    /// See also: https://blog.cloudflare.com/cloudflare-workers-as-a-serverless-rust-platform/
-    fn get_rng(&self) -> SmallRng {
-
-        //from Javascript
-        let ticks = current_time();
-
-        // Hack because of unit test error:
-        // cannot call wasm-bindgen imported functions on non-wasm targets
-        // let ticks: f64 = 1234567890.234;
-
-        //convert the number to byte array to use as a seed
-        let tick_bytes = transmute(ticks as u128);
-        SmallRng::from_seed(tick_bytes)
     }
 
     pub fn get_nums(&self) -> String {
@@ -137,7 +119,8 @@ impl Slots {
 
         for (key, value) in frequencies {
             if value >= 2 {
-                let values = iter::repeat(*key).take(value).collect();
+                // let values = iter::repeat(*key).take(value).collect();
+                let values = vec![*key; value];
                 plays.push(Play::NumMatch(values));
             }
         }
@@ -154,12 +137,19 @@ impl Slots {
             if let Some(play) = acc.pop() {
                 match play {
                     Play::NumSequence(seq) => {
+                        // eprintln!("seq={:?}", seq);
                         if let Some(last_num) = seq.last() {
+                            // eprintln!("num={:?} last_num={:?}", num, last_num);
                             let num = num.to_owned();
                             if num == last_num.to_owned() + 1 {
                                 let mut seq = seq.clone();
                                 seq.push(num);
                                 acc.push(Play::NumSequence(seq));
+                            } else {
+                                if seq.len() >= 3 {
+                                    acc.push(Play::NumSequence(seq));
+                                }
+                                acc.push(Play::NumSequence(vec![num]));
                             }
                         } else {
                             acc.push(Play::NumSequence(vec![*num]));
@@ -187,6 +177,31 @@ impl Slots {
     }
 }
 
+/// Copied from: https://github.com/stevenpack/bob-ross-lipsum-rust/blob/master/src/phrases.rs
+/// See also: https://blog.cloudflare.com/cloudflare-workers-as-a-serverless-rust-platform/
+fn get_rng() -> SmallRng {
+
+    //from Javascript
+    let ticks = current_time();
+
+    // Hack because of unit test error:
+    // cannot call wasm-bindgen imported functions on non-wasm targets
+    // let ticks: f64 = 1234567890.234;
+
+    //convert the number to byte array to use as a seed
+    let tick_bytes = transmute(ticks as u128);
+    SmallRng::from_seed(tick_bytes)
+}
+
+// fn get_many_rngs() {
+//     let mut thread_rng = thread_rng();
+//     // Create small, cheap to initialize and fast RNGs with random seeds.
+//     // One can generally assume this won't fail.
+//     let rngs: Vec<SmallRng> = iter::repeat(())
+//         .map(|()| SmallRng::from_rng(&mut thread_rng).unwrap())
+//         .take(10)
+//         .collect();
+// }
 
 fn transmute(x: u128) -> [u8; 16] {
 
@@ -231,9 +246,10 @@ mod tests {
     #[test]
     fn test_these() {
 
-        // let nums = vec![6,3,5,4,0,8];
-
-
+        let mut slots = Slots::new(SLOT_COUNT);
+        slots.nums = vec![6,3,5,4,0,8];
+        let score = slots.calc_score(&slots.nums);
+        eprintln!("score={:?}", score);
     }
 
     #[test]
